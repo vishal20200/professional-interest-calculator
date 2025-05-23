@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Advanced Interest Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #27ae60;
+            --accent: #e74c3c;
+            --background: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: var(--background);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 20px;
+        }
+
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            grid-column: 1 / -1;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .calculator-form {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .transaction-container {
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 1rem 0;
+            border: 2px dashed #eee;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .transaction-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: flex-end;
+            padding: 10px;
+            background: #f8f8f8;
+            border-radius: 6px;
+            transition: transform 0.2s;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            margin-top: 0.5rem;
+            font-size: 14px;
+        }
+
+        button {
+            cursor: pointer;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            transition: all 0.3s;
+            min-height: 48px;
+            touch-action: manipulation;
+        }
+
+        .add-btn { 
+            background: var(--secondary); 
+            color: white;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .calculate-btn { 
+            background: var(--primary); 
+            color: white; 
+            width: 100%;
+            font-size: 16px;
+            padding: 1.2rem;
+        }
+
+        .remove-btn { 
+            background: var(--accent); 
+            color: white;
+            min-width: 40px;
+        }
+
+        .results {
+            background: white;
+            padding: 2rem;
+            margin-top: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            grid-column: 1 / -1;
+        }
+
+        .summary-card {
+            background: var(--secondary);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: var(--primary);
+            color: white;
+        }
+
+        .chart-container {
+            margin-top: 2rem;
+            height: 300px;
+        }
+
+        .ad-space {
+            background: #fff;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            height: fit-content;
+            text-align: center;
+        }
+
+        .ad-content {
+            height: 300px;
+            background: linear-gradient(145deg, #f0f0f0, #ffffff);
+            border-radius: 8px;
+            display: grid;
+            place-items: center;
+            color: #666;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                padding: 10px;
+                gap: 15px;
+            }
+
+            header {
+                padding: 1.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .calculator-form,
+            .ad-space {
+                padding: 1rem;
+            }
+
+            .transaction-row {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .transaction-row div {
+                width: 100%;
+            }
+
+            input, select, button {
+                font-size: 16px !important;
+                padding: 1rem !important;
+            }
+
+            .remove-btn {
+                width: 100%;
+                margin-top: 0.5rem;
+            }
+
+            .ad-content {
+                height: 250px;
+            }
+
+            .summary-card {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+
+            .chart-container {
+                height: 250px;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .transaction-row {
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-calculator"></i> Advanced Interest Calculator</h1>
+            <p>Calculate Interest for Up to 1000 Transactions</p>
+        </header>
+
+        <!-- Calculator Section -->
+        <div class="calculator-form">
+            <div class="form-group">
+                <label><i class="fas fa-percentage"></i> Annual Interest Rate (%)</label>
+                <input type="number" id="rate" step="0.01" required>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-calendar-alt"></i> Calculate Up To</label>
+                <input type="date" id="end-date" required>
+            </div>
+
+            <button class="add-btn" id="add-transaction">
+                <i class="fas fa-plus-circle"></i>
+                Add Transaction (Max: 1000)
+            </button>
+
+            <div class="transaction-container" id="transactions-container">
+                <div class="transaction-row">
+                    <div style="flex:2">
+                        <label>Amount (₹)</label>
+                        <input type="number" step="0.01" required>
+                    </div>
+                    <div style="flex:2">
+                        <label>Transaction Date</label>
+                        <input type="date" required>
+                    </div>
+                    <button class="remove-btn" onclick="this.parentElement.remove()">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button class="calculate-btn" id="calculate">
+                <i class="fas fa-calculator"></i> Calculate All Interests
+            </button>
+        </div>
+
+        <!-- Advertisement Section -->
+        <div class="ad-space">
+            <h3>Premium Financial Services</h3>
+            <div class="ad-content">
+                Your Ad Banner Here<br>
+                (300x300px)
+            </div>
+            <div class="ad-content" style="margin-top:1rem">
+                Partner Advertisement<br>
+                (300x150px)
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results" id="results">
+            <div class="summary-card" id="summary">
+                <div>
+                    <h3 style="margin:0">Total Interest</h3>
+                    <p id="total-interest" style="font-size:24px;margin:5px 0">₹0.00</p>
+                </div>
+                <div>
+                    <h3 style="margin:0">Total Amount</h3>
+                    <p id="total-amount" style="font-size:24px;margin:5px 0">₹0.00</p>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="interestChart"></canvas>
+            </div>
+
+            <table id="results-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Amount</th>
+                        <th>Days</th>
+                        <th>Interest</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="results-body">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('end-date').value = today;
+            let chart = null;
+
+            // Add Transaction
+            const addTransaction = () => {
+                const transactionCount = document.querySelectorAll('.transaction-row').length;
+                if(transactionCount >= 1000) {
+                    alert('Maximum 1000 transactions allowed');
+                    return;
+                }
+
+                const newRow = document.createElement('div');
+                newRow.className = 'transaction-row';
+                newRow.innerHTML = `
+                    <div style="flex:2">
+                        <label>Amount (₹)</label>
+                        <input type="number" step="0.01" required>
+                    </div>
+                    <div style="flex:2">
+                        <label>Transaction Date</label>
+                        <input type="date" max="${today}" required>
+                    </div>
+                    <button class="remove-btn" onclick="this.parentElement.remove()">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                document.getElementById('transactions-container').appendChild(newRow);
+            };
+
+            document.getElementById('add-transaction').addEventListener('click', addTransaction);
+            document.getElementById('add-transaction').addEventListener('touchend', (e) => {
+                e.preventDefault();
+                addTransaction();
+            });
+
+            // Calculate Interest
+            document.getElementById('calculate').addEventListener('click', calculateInterest);
+            document.getElementById('calculate').addEventListener('touchend', (e) => {
+                e.preventDefault();
+                calculateInterest();
+            });
+
+            function calculateInterest() {
+                const rate = parseFloat(document.getElementById('rate').value);
+                const endDate = new Date(document.getElementById('end-date').value);
+                const transactions = [];
+                
+                // Validate inputs
+                let valid = true;
+                if(!rate || rate <= 0) {
+                    alert('Please enter valid interest rate');
+                    valid = false;
+                }
+
+                document.querySelectorAll('.transaction-row').forEach(row => {
+                    const inputs = row.querySelectorAll('input');
+                    const amount = parseFloat(inputs[0].value);
+                    const date = new Date(inputs[1].value);
+                    
+                    if(!amount || isNaN(date)) {
+                        inputs.forEach(input => input.style.borderColor = 'var(--accent)');
+                        valid = false;
+                    }
+                    transactions.push({ amount, date });
+                });
+
+                if(!valid) return;
+
+                // Calculate results
+                const formatter = new Intl.NumberFormat('en-IN', { 
+                    style: 'currency', 
+                    currency: 'INR' 
+                });
+
+                let totalInterest = 0;
+                let totalAmount = 0;
+                const results = [];
+                const chartData = {
+                    labels: [],
+                    amounts: [],
+                    interests: []
+                };
+
+                transactions.forEach((trans, index) => {
+                    const start = trans.date;
+                    const end = new Date(endDate);
+                    const days = Math.max(0, Math.floor((end - start) / (1000 * 3600 * 24)));
+                    const interest = trans.amount * (rate/100) * (days/365);
+                    
+                    totalInterest += interest;
+                    totalAmount += trans.amount;
+                    
+                    results.push({
+                        index: index + 1,
+                        amount: trans.amount,
+                        days,
+                        interest,
+                        total: trans.amount + interest
+                    });
+
+                    // Chart data
+                    chartData.labels.push(`Transaction ${index + 1}`);
+                    chartData.amounts.push(trans.amount);
+                    chartData.interests.push(interest);
+                });
+
+                // Update summary
+                document.getElementById('total-interest').textContent = formatter.format(totalInterest);
+                document.getElementById('total-amount').textContent = formatter.format(totalAmount + totalInterest);
+
+                // Update results table
+                const resultsBody = document.getElementById('results-body');
+                resultsBody.innerHTML = results.map(trans => `
+                    <tr>
+                        <td>${trans.index}</td>
+                        <td>${formatter.format(trans.amount)}</td>
+                        <td>${trans.days}</td>
+                        <td style="color:var(--secondary)">+${formatter.format(trans.interest)}</td>
+                        <td>${formatter.format(trans.total)}</td>
+                    </tr>
+                `).join('');
+
+                // Update chart
+                if(chart) chart.destroy();
+                const ctx = document.getElementById('interestChart').getContext('2d');
+                chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: chartData.labels,
+                        datasets: [{
+                            label: 'Principal Amount',
+                            data: chartData.amounts,
+                            backgroundColor: 'rgba(39, 174, 96, 0.7)'
+                        },
+                        {
+                            label: 'Interest Earned',
+                            data: chartData.interests,
+                            backgroundColor: 'rgba(44, 62, 80, 0.7)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: value => '₹' + value.toLocaleString()
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        // Mobile optimizations
+        document.addEventListener('touchstart', function() {}, {passive: true});
+        document.addEventListener('dblclick', (e) => {
+            if (window.innerWidth <= 768) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    </script>
+</body>
+</html>
